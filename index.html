@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>乳首当てゲーム</title>
+  <style>
+    /* ==========================================================================
+       ベーススタイル & ハイコントラスト・ロイヤルサロンテーマ（外部CDN不使用）
+       ========================================================================== */
+    :root {
+      --bg-outer: #16110e;
+      --stage-bg-top: #fffdf5;
+      --stage-bg-mid: #f7e7c1;
+      --stage-bg-bot: #d9b873;
+      --gold-main: #d4af37;
+      --gold-bright: #ffe680;
+      --gold-dark: #856112;
+      --crimson: #dc2626;
+      --text-light: #fffbeb;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      /* ダブルタップによるブラウザ拡大を防止（通常のスクロール操作は維持） */
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-outer);
+      background-image: radial-gradient(circle at 50% 30%, #2e231c 0%, #0f0b09 95%);
+      color: var(--text-light);
+      font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", Georgia, serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* 劇画・インパクト見出し用フォントスタック */
+    .impact-font {
+      font-family: "Hiragino Kaku Gothic Std", "Yu Gothic", "Noto Sans JP", Impact, sans-serif;
+      font-weight: 900;
+    }
+
+    /* スマホ優先・縦長メインコンテナ */
+    #app-container {
+      width: 100%;
+      max-width: 460px;
+      height: 100dvh;
+      max-height: 860px;
+      background: linear-gradient(180deg, #261d18 0%, #17110e 100%);
+      border-left: 2px solid var(--gold-dark);
+      border-right: 2px solid var(--gold-dark);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.95);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 画面全体シェイク演出 */
+    #app-container.impact-shake {
+      animation: impactShake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes impactShake {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      15% { transform: translate(-8px, 6px) scale(1.02); }
+      30% { transform: translate(8px, -6px) scale(1.02); }
+      45% { transform: translate(-6px, -4px) scale(1.01); }
+      60% { transform: translate(6px, 5px) scale(1.01); }
+      75% { transform: translate(-3px, 2px); }
+    }
+
+    /* 閃光フラッシュオーバーレイ */
+    #flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, #ffffff 0%, #fde047 60%, transparent 100%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 60;
+      transition: opacity 0.18s ease-out;
+    }
+
+    /* ヘッダーバー */
+    header {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: linear-gradient(90deg, #1c1511, #30241c, #1c1511);
+      border-bottom: 2px solid var(--gold-main);
+      z-index: 20;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 900;
+      font-size: 0.84rem;
+      color: var(--gold-bright);
+    }
+
+    .header-status span.val {
+      color: #fff;
+      font-size: 0.98rem;
+    }
+
+    .timer-pill {
+      background: rgba(220, 38, 38, 0.28);
+      border: 1px solid #f87171;
+      color: #fecaca;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      display: none;
+    }
+
+    .timer-pill.active {
+      display: inline-block;
+    }
+
+    .timer-pill.urgent {
+      background: #dc2626;
+      color: #fff;
+      border-color: #fef08a;
+      animation: urgentPulse 0.3s infinite alternate;
+    }
+
+    @keyframes urgentPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    .combo-pill {
+      background: linear-gradient(135deg, #f59e0b, #dc2626);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid #fef08a;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+      display: none;
+    }
+
+    .combo-pill.active {
+      display: inline-block;
+      animation: popScale 0.25s ease-out;
+    }
+
+    @keyframes popScale {
+      0% { transform: scale(1.45); }
+      100% { transform: scale(1); }
+    }
+
+    .tool-btn {
+      background: rgba(212, 175, 55, 0.2);
+      border: 1px solid var(--gold-main);
+      color: var(--gold-bright);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.94);
+      background: var(--gold-main);
+      color: #000;
+    }
+
+    /* 画面切り替え管理 */
+    .screen {
+      display: none;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       1. タイトル画面
+       ========================================================================== */
+    #title-screen {
+      justify-content: space-evenly;
+      align-items: center;
+      text-align: center;
+      background: radial-gradient(circle at 50% 35%, rgba(253, 230, 138, 0.14) 0%, transparent 72%);
+    }
+
+    .main-title {
+      font-size: 2.35rem;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: 0.04em;
+      background: linear-gradient(180deg, #ffffff 0%, #fde047 50%, #b45309 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 0 #3b2206) drop-shadow(0 0 18px rgba(250, 204, 21, 0.45));
+    }
+
+    /* タイトルのおじさんポートレート */
+    .title-portrait {
+      width: 148px;
+      height: 148px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 4px solid var(--gold-main);
+      background: radial-gradient(circle at 50% 30%, #fffbeb 0%, #f3d999 65%, #c79c46 100%);
+      overflow: hidden;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.75), 0 0 22px rgba(212, 175, 55, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .title-portrait svg {
+      width: 116%;
+      height: auto;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ハイスコア＆称号パネル */
+    .records-panel {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.48);
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      border-radius: 14px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .records-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      font-size: 0.68rem;
+      color: #e7dec8;
+    }
+
+    .records-row strong {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--gold-bright);
+      margin-top: 1px;
+    }
+
+    .panel-sub-actions {
+      border-top: 1px dashed rgba(212, 175, 55, 0.32);
+      padding-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .career-text {
+      font-size: 0.74rem;
+      color: #d6ccb8;
+      font-weight: bold;
+    }
+
+    .mini-chip-btn {
+      background: rgba(212, 175, 55, 0.16);
+      border: 1px solid rgba(212, 175, 55, 0.55);
+      color: #fde68a;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.76rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .mini-chip-btn:active {
+      background: var(--gold-main);
+      color: #000;
+    }
+
+    /* モード選択エリア */
+    .mode-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .challenge-card {
+      background: rgba(225, 29, 72, 0.14);
+      border: 1.5px solid rgba(251, 113, 133, 0.55);
+      border-radius: 14px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .diff-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .diff-btn {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(251, 113, 133, 0.4);
+      color: #fecdd3;
+      border-radius: 8px;
+      padding: 5px 4px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      cursor: pointer;
+      line-height: 1.25;
+    }
+
+    .diff-btn.selected {
+      background: linear-gradient(180deg, #fb7185, #be123c);
+      color: #fff;
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(244, 63, 94, 0.65);
+    }
+
+    .dandy-btn {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1.06rem;
+      letter-spacing: 0.04em;
+      color: #1f1404;
+      background: linear-gradient(180deg, #fef08a 0%, #eab308 52%, #a16207 100%);
+      border: 2px solid #fffbeb;
+      border-radius: 14px;
+      box-shadow: 0 5px 0 #663c05, 0 8px 18px rgba(0, 0, 0, 0.65);
+      cursor: pointer;
+      transition: transform 0.07s, box-shadow 0.07s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.2;
+    }
+
+    .dandy-btn span.btn-sub {
+      font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+      font-size: 0.7rem;
+      font-weight: 900;
+      opacity: 0.9;
+      margin-top: 3px;
+    }
+
+    .dandy-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #663c05;
+    }
+
+    /* CHALLENGE（無限沼モード）用ボタン */
+    .dandy-btn.challenge-style {
+      color: #fff;
+      background: linear-gradient(180deg, #fb7185 0%, #e11d48 50%, #881337 100%);
+      border-color: #ffe4e6;
+      box-shadow: 0 5px 0 #4c0519, 0 8px 20px rgba(225, 29, 72, 0.45);
+    }
+
+    .dandy-btn.challenge-style:active {
+      box-shadow: 0 1px 0 #4c0519;
+    }
+
+    /* 決定（STOP）時の赤熱モード */
+    .dandy-btn.crimson-mode {
+      color: #fff;
+      background: linear-gradient(180deg, #ff5e5e 0%, #dc2626 50%, #991b1b 100%);
+      border-color: #fef08a;
+      box-shadow: 0 5px 0 #5c0f0f, 0 0 22px rgba(239, 68, 68, 0.85);
+      animation: pulseBtn 0.45s infinite alternate;
+    }
+
+    @keyframes pulseBtn {
+      from { transform: scale(1); }
+      to { transform: scale(1.02); }
+    }
+
+    /* ==========================================================================
+       2. メインゲーム画面
+       ========================================================================== */
+    #play-screen {
+      overflow: hidden;
+    }
+
+    .dialogue-box {
+      flex-shrink: 0;
+      background: #1a130f;
+      border: 2px solid var(--gold-main);
+      border-radius: 12px;
+      padding: 9px 12px;
+      min-height: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+      z-index: 15;
+    }
+
+    .char-name-tag {
+      position: absolute;
+      top: -10px;
+      left: 12px;
+      background: var(--gold-main);
+      color: #1a130f;
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding: 1px 9px;
+      border-radius: 4px;
+    }
+
+    .fever-tag {
+      position: absolute;
+      top: -11px;
+      right: 10px;
+      background: linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding: 2px 9px;
+      border-radius: 999px;
+      border: 1px solid #fff;
+      box-shadow: 0 0 12px #f59e0b;
+      display: none;
+      animation: feverBounce 0.4s infinite alternate;
+    }
+
+    .fever-tag.active {
+      display: block;
+    }
+
+    @keyframes feverBounce {
+      from { transform: scale(1) rotate(-2deg); }
+      to { transform: scale(1.08) rotate(2deg); }
+    }
+
+    #dialogue-text {
+      font-size: 0.92rem;
+      font-weight: 900;
+      color: #fff;
+      margin: 0;
+      line-height: 1.32;
+    }
+
+    /* キャラクターステージ（明るいロイヤルサロン調背景で黒シャツ・大胸筋がくっきり） */
+    #character-stage {
+      flex: 1 1 auto;
+      min-height: 220px;
+      width: 100%;
+      position: relative;
+      margin: 8px 0;
+      border-radius: 16px;
+      border: 3px solid var(--gold-main);
+      background: radial-gradient(circle at 50% 42%, var(--stage-bg-top) 0%, var(--stage-bg-mid) 58%, var(--stage-bg-bot) 100%);
+      overflow: hidden;
+      touch-action: none;
+      cursor: crosshair;
+      display: block;
+      box-shadow: inset 0 0 30px rgba(120, 80, 20, 0.35), 0 6px 18px rgba(0, 0, 0, 0.6);
+    }
+
+    #character-stage.fever-bg {
+      background: radial-gradient(circle at 50% 40%, #ffffff 0%, #fef08a 35%, #f59e0b 75%, #b45309 100%);
+      border-color: #fff;
+      box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.85), 0 0 28px rgba(250, 204, 21, 0.9);
+    }
+
+    /* 後光サンバースト */
+    #sunburst {
+      position: absolute;
+      inset: -40%;
+      background: repeating-conic-gradient(
+        from 0deg,
+        rgba(255, 255, 255, 0.38) 0deg 10deg,
+        transparent 10deg 20deg
+      );
+      pointer-events: none;
+      opacity: 0.45;
+      animation: rotateSlow 24s linear infinite;
+      z-index: 1;
+    }
+
+    #character-stage.fever-bg #sunburst {
+      opacity: 0.95;
+      animation: rotateSlow 4.5s linear infinite;
+    }
+
+    @keyframes rotateSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* 劇画集中線 */
+    #speed-lines {
+      position: absolute;
+      inset: -25%;
+      background: repeating-conic-gradient(
+        from 0deg,
+        rgba(30, 15, 5, 0.34) 0deg 2deg,
+        transparent 2deg 8deg
+      );
+      mask-image: radial-gradient(circle, transparent 34%, black 72%);
+      -webkit-mask-image: radial-gradient(circle, transparent 34%, black 72%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s;
+      animation: spinLines 0.35s steps(2) infinite;
+      z-index: 5;
+    }
+
+    @keyframes spinLines {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(8deg); }
+    }
+
+    /* パーティクルキャンバス */
+    #fx-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+      z-index: 18;
+    }
+
+    /* おじさんSVGラッパー */
+    #dandy-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      z-index: 3;
+      filter: drop-shadow(0 8px 14px rgba(45, 25, 10, 0.45));
+    }
+
+    #dandy-svg {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+
+    .shake-mild {
+      animation: shakeMild 0.14s infinite;
+    }
+    .shake-hard {
+      animation: shakeHard 0.07s infinite;
+    }
+
+    @keyframes shakeMild {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-2.5px, 1.5px); }
+      75% { transform: translate(2.5px, -1.5px); }
+    }
+
+    @keyframes shakeHard {
+      0%, 100% { transform: translate(0, 0) scale(1.03); }
+      20% { transform: translate(-6px, 3px) scale(1.03); }
+      40% { transform: translate(6px, -3px) scale(1.03); }
+      60% { transform: translate(-5px, -3px) scale(1.03); }
+      80% { transform: translate(5px, 4px) scale(1.03); }
+    }
+
+    /* 指先カーソル */
+    #touch-cursor {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 3px solid #dc2626;
+      background: radial-gradient(circle, rgba(254, 240, 138, 0.65) 0%, rgba(220, 38, 38, 0.2) 70%);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      display: none;
+      z-index: 10;
+      box-shadow: 0 0 14px rgba(220, 38, 38, 0.75);
+    }
+
+    /* 擬音ポップアップ */
+    #onomatopoeia {
+      position: absolute;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #dc2626;
+      text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 0 4px 8px rgba(0,0,0,0.5);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 11;
+    }
+
+    /* 巨大カットイン文字 */
+    #cutin-banner {
+      position: absolute;
+      top: 42%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.2);
+      font-size: 2.35rem;
+      font-weight: 900;
+      white-space: nowrap;
+      color: #fff;
+      background: linear-gradient(180deg, #ffffff 0%, #fde047 55%, #ea580c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 5px 0 #7c2d12) drop-shadow(0 0 18px rgba(250, 204, 21, 0.95));
+      pointer-events: none;
+      opacity: 0;
+      z-index: 25;
+    }
+
+    #cutin-banner.show {
+      animation: cutinPop 0.85s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards;
+    }
+
+    @keyframes cutinPop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(-8deg); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(3deg); }
+      35% { opacity: 1; transform: translate(-50%, -50%) scale(1.0) rotate(0deg); }
+      80% { opacity: 1; transform: translate(-50%, -55%) scale(1.04); }
+      100% { opacity: 0; transform: translate(-50%, -70%) scale(1.1); }
+    }
+
+    /* 正解位置ピン＆探索位置マーカー */
+    .result-marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 14;
+      display: none;
+    }
+
+    #target-pin {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(220, 38, 38, 0.45);
+      border: 3px solid #dc2626;
+      box-shadow: 0 0 16px #ef4444;
+    }
+    #target-pin::after {
+      content: "★正解";
+      position: absolute;
+      top: -23px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #dc2626;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 900;
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    #guess-pin {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.55);
+      border: 3px solid #2563eb;
+    }
+    #guess-pin::after {
+      content: "指";
+      position: absolute;
+      bottom: -21px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 900;
+      padding: 0 5px;
+      border-radius: 4px;
+    }
+
+    /* タイミングゲージ（往復回数表示付き） */
+    #timing-panel {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(24, 17, 13, 0.96);
+      border: 2px solid var(--gold-bright);
+      border-radius: 14px;
+      padding: 10px 12px;
+      z-index: 20;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.85);
+    }
+
+    .timing-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .timing-label {
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: var(--gold-bright);
+    }
+
+    .bounce-badge {
+      background: rgba(250, 204, 21, 0.2);
+      border: 1px solid #fde047;
+      color: #fef08a;
+      font-size: 0.74rem;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .bounce-badge.penalty {
+      background: rgba(220, 38, 38, 0.35);
+      border-color: #f87171;
+      color: #fecaca;
+    }
+
+    .timing-track {
+      width: 100%;
+      height: 28px;
+      background: #2b211b;
+      border-radius: 999px;
+      border: 2px solid #785c3a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sweet-zone-good {
+      position: absolute;
+      left: 33%;
+      width: 34%;
+      height: 100%;
+      background: rgba(250, 204, 21, 0.35);
+    }
+
+    .sweet-zone-perfect {
+      position: absolute;
+      left: 44%;
+      width: 12%;
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
+      box-shadow: 0 0 14px #ef4444;
+    }
+
+    #timing-cursor {
+      position: absolute;
+      top: 0;
+      left: 0%;
+      width: 9px;
+      height: 100%;
+      background: #fff;
+      box-shadow: 0 0 12px #fff, 0 0 4px #000;
+      transform: translateX(-50%);
+    }
+
+    /* ラウンド結果バナー */
+    #round-result-overlay {
+      display: none;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      background: rgba(22, 16, 12, 0.95);
+      border: 2px solid var(--gold-main);
+      border-radius: 12px;
+      padding: 9px;
+      text-align: center;
+      z-index: 22;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.75);
+    }
+
+    .round-score-big {
+      font-size: 1.65rem;
+      font-weight: 900;
+      margin: 2px 0;
+    }
+
+    .score-plus { color: #fde047; text-shadow: 0 2px 10px rgba(253, 224, 71, 0.6); }
+    .score-minus { color: #f87171; text-shadow: 0 2px 10px rgba(248, 113, 113, 0.6); }
+
+    .round-detail-text {
+      font-size: 0.78rem;
+      color: #e7dec8;
+    }
+
+    .bottom-controls {
+      flex-shrink: 0;
+      z-index: 15;
+    }
+
+    /* ==========================================================================
+       3. 最終リザルト画面
+       ========================================================================== */
+    #result-screen {
+      justify-content: space-between;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .new-record-badge {
+      display: none;
+      background: linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 900;
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 1px solid #fff;
+      margin: 0 auto;
+    }
+
+    .result-rank-box {
+      background: radial-gradient(circle, rgba(250, 204, 21, 0.25) 0%, rgba(24, 18, 14, 0.92) 80%);
+      border: 2px solid var(--gold-main);
+      border-radius: 16px;
+      padding: 14px 12px;
+    }
+
+    .rank-letter {
+      font-size: 3.2rem;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(180deg, #fff 0%, #fde047 55%, #b45309 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 0 #3f2305);
+    }
+
+    .rank-title {
+      font-size: 1.12rem;
+      font-weight: 900;
+      color: var(--gold-bright);
+      margin-top: 4px;
+    }
+
+    .final-score-num {
+      font-size: 1.9rem;
+      font-weight: 900;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    .history-list {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--gold-dark);
+      border-radius: 12px;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 0.8rem;
+      max-height: 155px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed rgba(212, 175, 55, 0.25);
+      padding-bottom: 3px;
+    }
+    .history-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .secondary-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .secondary-btn {
+      flex: 1;
+      padding: 11px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--gold-main);
+      background: rgba(212, 175, 55, 0.16);
+      color: var(--gold-bright);
+      font-weight: 900;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* X（旧Twitter）シェアボタン */
+    .x-share-btn {
+      flex: 1;
+      padding: 11px 8px;
+      border-radius: 12px;
+      border: 1px solid #52525b;
+      background: #09090b;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .x-share-btn:active {
+      transform: scale(0.97);
+      background: #27272a;
+    }
+
+    /* ==========================================================================
+       称号コレクションモーダル
+       ========================================================================== */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.86);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 14px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #211914;
+      border: 2px solid var(--gold-main);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 82dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      gap: 10px;
+    }
+
+    .list-scroll {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      padding-right: 2px;
+      min-height: 180px;
+    }
+
+    .badge-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge-item.locked {
+      opacity: 0.45;
+      filter: grayscale(1);
+    }
+
+    /* トースト通知 */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold-main);
+      color: #000;
+      font-weight: 900;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 200;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.85);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-container">
+  <div id="flash-overlay"></div>
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="header-status impact-font">
+      <div id="hdr-round-wrap">ROUND <span class="val">-</span></div>
+      <div>SCORE <span id="hdr-score" class="val">0</span></div>
+      <div id="hdr-timer" class="timer-pill">8.0s</div>
+      <div id="hdr-combo" class="combo-pill">2 COMBO!</div>
+    </div>
+    <div>
+      <button id="btn-sound" class="tool-btn" title="効果音切替">🔊 ON</button>
+    </div>
+  </header>
+
+  <!-- 1. タイトル画面 -->
+  <section id="title-screen" class="screen active">
+    <h1 class="main-title impact-font">乳首当てゲーム</h1>
+
+    <!-- 明るいサロン背景に映える金髪筋肉おじさんポートレート -->
+    <div class="title-portrait">
+      <svg viewBox="0 0 400 420" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tSkin" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e8a474"/>
+            <stop offset="60%" stop-color="#c97a48"/>
+            <stop offset="100%" stop-color="#8c4820"/>
+          </linearGradient>
+          <linearGradient id="tHair" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fff7b2"/>
+            <stop offset="50%" stop-color="#eab308"/>
+            <stop offset="100%" stop-color="#a16207"/>
+          </linearGradient>
+        </defs>
+        <path d="M115,155 C105,80 135,35 200,32 C265,35 295,80 285,155 C275,115 245,95 200,95 C155,95 125,115 115,155 Z" fill="url(#tHair)" stroke="#3d2704" stroke-width="4"/>
+        <path d="M145,45 Q200,75 255,45 M130,68 Q200,92 270,68" fill="none" stroke="#8a6206" stroke-width="3"/>
+        <path d="M125,120 L125,195 C125,245 165,275 200,278 C235,275 275,245 275,195 L275,120 C255,95 145,95 125,120 Z" fill="url(#tSkin)" stroke="#2b1408" stroke-width="4"/>
+        <path d="M135,195 L155,235 M265,195 L245,235 M175,252 Q200,260 225,252" fill="none" stroke="#5e2a10" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M136,148 L186,162 L182,148 L138,136 Z" fill="url(#tHair)" stroke="#2b1408" stroke-width="2.5"/>
+        <path d="M264,148 L214,162 L218,148 L262,136 Z" fill="url(#tHair)" stroke="#2b1408" stroke-width="2.5"/>
+        <path d="M144,165 L182,172 L176,180 L146,175 Z" fill="#fff"/>
+        <circle cx="165" cy="172" r="5.5" fill="#1a120b"/>
+        <path d="M256,165 L218,172 L224,180 L254,175 Z" fill="#fff"/>
+        <circle cx="235" cy="172" r="5.5" fill="#1a120b"/>
+        <path d="M200,165 L193,205 L206,208" fill="none" stroke="#3b1908" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M168,228 Q205,242 236,222" fill="none" stroke="#2b1408" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- ハイスコア＆称号コレクション確認 -->
+    <div class="records-panel">
+      <div class="records-row impact-font">
+        <div>TIME ATTACK<strong id="best-5r">0</strong></div>
+        <div>NORMAL<strong id="best-normal">0 連続</strong></div>
+        <div>HARD<strong id="best-hard">0 連続</strong></div>
+        <div>DEATH<strong id="best-death">0 連続</strong></div>
+      </div>
+      <div class="panel-sub-actions">
+        <span class="career-text">累計: <strong id="total-career" style="color:#fde047;">0</strong> pts</span>
+        <button id="btn-open-titles" class="mini-chip-btn">👑 称号: <span id="current-title-name">見習い指圧師</span></button>
+      </div>
+    </div>
+
+    <!-- モード選択エリア -->
+    <div class="mode-section">
+      <!-- 1. TIME ATTACK（全5ラウンド） -->
+      <button id="btn-start-5r" class="dandy-btn impact-font">
+        ⏱ TIME ATTACK（全5ラウンド）
+        <span class="btn-sub">8秒以内に発見＆少ないメーター往復回数で即決ボーナス！</span>
+      </button>
+
+      <!-- 2. CHALLENGE（無限エンドレス＋3難易度選択） -->
+      <div class="challenge-card">
+        <div class="diff-selector impact-font">
+          <button class="diff-btn selected" data-diff="NORMAL">NORMAL<br><span style="font-size:0.65rem;">制限10.0秒</span></button>
+          <button class="diff-btn" data-diff="HARD">HARD<br><span style="font-size:0.65rem;">制限6.5秒</span></button>
+          <button class="diff-btn" data-diff="DEATH">DEATH<br><span style="font-size:0.65rem;">制限4.0秒</span></button>
+        </div>
+        <button id="btn-start-challenge" class="dandy-btn challenge-style impact-font">
+          🔥 CHALLENGE（無限エンドレス）
+          <span class="btn-sub">ミスor時間切れで即終了！5連続成功で即決1/2フィーバー</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. メインゲーム画面 -->
+  <section id="play-screen" class="screen">
+    <div class="dialogue-box">
+      <div class="char-name-tag">剛田 轟（54歳・実業家）</div>
+      <div id="fever-badge" class="fever-tag impact-font">🔥 DANDY FEVER (SCORE ×2)</div>
+      <p id="dialogue-text">フッ…どこを探している？遠慮はいらんぞ。</p>
+    </div>
+
+    <!-- タッチ探索ステージ -->
+    <div id="character-stage">
+      <div id="sunburst"></div>
+      <div id="speed-lines"></div>
+      <canvas id="fx-canvas"></canvas>
+      <div id="cutin-banner" class="impact-font">GOD SENSATION!!</div>
+      <div id="onomatopoeia" class="impact-font">ﾄﾞｸﾝ…</div>
+      <div id="touch-cursor"></div>
+      <div id="target-pin" class="result-marker"></div>
+      <div id="guess-pin" class="result-marker"></div>
+
+      <!-- 劇画調・金髪筋肉むちむちおじさん（SVG完全描画） -->
+      <div id="dandy-wrapper">
+        <svg id="dandy-svg" viewBox="0 0 400 460" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="skinGrad" x1="0.1" y1="0" x2="0.9" y2="1">
+              <stop offset="0%" stop-color="#eba678"/>
+              <stop offset="55%" stop-color="#c97844"/>
+              <stop offset="100%" stop-color="#87411a"/>
+            </linearGradient>
+            <linearGradient id="blushSkinGrad" x1="0.1" y1="0" x2="0.9" y2="1">
+              <stop offset="0%" stop-color="#f79483"/>
+              <stop offset="55%" stop-color="#db5846"/>
+              <stop offset="100%" stop-color="#94291d"/>
+            </linearGradient>
+            <linearGradient id="goldHairGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff8bd"/>
+              <stop offset="45%" stop-color="#eab308"/>
+              <stop offset="85%" stop-color="#b45309"/>
+              <stop offset="100%" stop-color="#78350f"/>
+            </linearGradient>
+            <radialGradient id="pecLeftGrad" cx="0.42" cy="0.42" r="0.62">
+              <stop offset="0%" stop-color="#52525b"/>
+              <stop offset="50%" stop-color="#27272a"/>
+              <stop offset="100%" stop-color="#09090b"/>
+            </radialGradient>
+            <radialGradient id="pecRightGrad" cx="0.58" cy="0.42" r="0.62">
+              <stop offset="0%" stop-color="#52525b"/>
+              <stop offset="50%" stop-color="#27272a"/>
+              <stop offset="100%" stop-color="#09090b"/>
+            </radialGradient>
+            <linearGradient id="chainGold" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#b45309"/>
+              <stop offset="30%" stop-color="#fef08a"/>
+              <stop offset="50%" stop-color="#eab308"/>
+              <stop offset="75%" stop-color="#fef08a"/>
+              <stop offset="100%" stop-color="#92400e"/>
+            </linearGradient>
+          </defs>
+
+          <!-- 1. 広背筋・丸太のような腕・上半身シルエット -->
+          <g id="body-base">
+            <path d="M95,215 Q145,175 155,155 L245,155 Q255,175 305,215 L360,250 L385,460 L15,460 L40,250 Z" fill="#18181b" stroke="#000000" stroke-width="5"/>
+            <path d="M46,255 Q72,225 102,216 M354,255 Q328,225 298,216" fill="none" stroke="#52525b" stroke-width="3" stroke-linecap="round"/>
+
+            <!-- 露出している首〜胸元の肌 -->
+            <path d="M152,150 L248,150 L262,215 L200,305 L138,215 Z" fill="url(#skinGrad)" stroke="#2b1206" stroke-width="3.5"/>
+            <path d="M168,162 L185,210 M232,162 L215,210" stroke="#6e3112" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M135,218 Q175,232 196,225 M265,218 Q225,232 204,225" fill="none" stroke="#59240b" stroke-width="4" stroke-linecap="round"/>
+            <path d="M200,245 L200,300" stroke="#4a1c07" stroke-width="4.5" stroke-linecap="round"/>
+
+            <!-- ピチピチ黒シャツ（はち切れそうな大胸筋） -->
+            <path d="M72,235 C105,215 155,222 198,262 L198,358 C155,375 95,365 76,322 C65,295 62,255 72,235 Z" fill="url(#pecLeftGrad)" stroke="#000000" stroke-width="3.5"/>
+            <path d="M328,235 C295,215 245,222 202,262 L202,358 C245,375 305,365 324,322 C335,295 338,255 328,235 Z" fill="url(#pecRightGrad)" stroke="#000000" stroke-width="3.5"/>
+
+            <!-- 腹直筋 -->
+            <path d="M120,365 L280,365 L270,460 L130,460 Z" fill="#141417"/>
+            <path d="M142,382 Q170,392 195,385 M258,382 Q230,392 205,385" fill="none" stroke="#3f3f46" stroke-width="3" stroke-linecap="round"/>
+            <path d="M146,418 Q172,428 195,420 M254,418 Q228,428 205,420" fill="none" stroke="#3f3f46" stroke-width="3" stroke-linecap="round"/>
+            <path d="M200,360 L200,460" stroke="#000000" stroke-width="4"/>
+
+            <!-- シャツの引っ張りシワ -->
+            <path d="M188,285 L155,275 M190,305 L145,308 M188,328 L158,340" stroke="#71717a" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M212,285 L245,275 M210,305 L255,308 M212,328 L242,340" stroke="#71717a" stroke-width="2.2" stroke-linecap="round"/>
+
+            <!-- 襟＆金のボタン -->
+            <path d="M138,210 L200,305 L262,210 L276,225 L200,322 L124,225 Z" fill="#27272a" stroke="#000000" stroke-width="3"/>
+            <circle cx="200" cy="332" r="5.5" fill="#fde047" stroke="#000" stroke-width="1.5"/>
+            <circle cx="200" cy="378" r="5.5" fill="#fde047" stroke="#000" stroke-width="1.5"/>
+            <circle cx="200" cy="424" r="5.5" fill="#fde047" stroke="#000" stroke-width="1.5"/>
+
+            <!-- 太い金のネックレス -->
+            <path d="M154,175 Q200,268 246,175" fill="none" stroke="url(#chainGold)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M154,175 Q200,268 246,175" fill="none" stroke="#422006" stroke-width="8" stroke-dasharray="4 6" opacity="0.55"/>
+          </g>
+
+          <!-- 2. 頭部・金髪オールバック -->
+          <g id="head-group">
+            <path d="M134,105 C120,102 118,138 134,142" fill="#b86837" stroke="#2b1206" stroke-width="3"/>
+            <path d="M266,105 C280,102 282,138 266,142" fill="#b86837" stroke="#2b1206" stroke-width="3"/>
+
+            <path id="face-base" d="M136,68 L136,138 C136,178 170,202 200,204 C230,202 264,178 264,138 L264,68 C245,45 155,45 136,68 Z" fill="url(#skinGrad)" stroke="#240f05" stroke-width="3.8"/>
+
+            <path d="M128,98 C120,40 148,12 200,10 C252,12 280,40 272,98 C264,66 238,54 200,54 C162,54 136,66 128,98 Z" fill="url(#goldHairGrad)" stroke="#3b2304" stroke-width="3.8"/>
+            <path d="M152,22 Q200,45 248,22 M140,38 Q200,60 260,38 M168,14 L175,48 M232,14 L225,48 M200,11 L200,46" fill="none" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/>
+
+            <path d="M144,132 L162,168 M256,132 L238,168 M178,184 Q200,191 222,184" fill="none" stroke="#59230a" stroke-width="3" stroke-linecap="round"/>
+            <path d="M200,102 L194,136 L207,139" fill="none" stroke="#2b1206" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M192,138 Q200,143 209,138" fill="none" stroke="#59230a" stroke-width="2"/>
+
+            <!-- 表情差分 1：余裕の笑み -->
+            <g id="expr-calm">
+              <path d="M144,88 L188,100 L184,88 L146,77 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2"/>
+              <path d="M256,88 L212,100 L216,88 L254,77 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2"/>
+              <path d="M150,103 L185,109 L180,116 L152,111 Z" fill="#fff"/>
+              <circle cx="169" cy="109" r="4.8" fill="#18120c"/>
+              <path d="M250,103 L215,109 L220,116 L248,111 Z" fill="#fff"/>
+              <circle cx="231" cy="109" r="4.8" fill="#18120c"/>
+              <path d="M172,158 Q204,170 232,152" fill="none" stroke="#240f05" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M226,149 L235,155" stroke="#240f05" stroke-width="2.5"/>
+            </g>
+
+            <!-- 表情差分 2：反応・少し動揺 -->
+            <g id="expr-react" style="display:none;">
+              <path d="M144,82 L188,97 L185,85 L146,72 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2"/>
+              <path d="M256,92 L212,98 L215,87 L254,80 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2"/>
+              <ellipse cx="168" cy="108" rx="15" ry="8" fill="#fff" stroke="#240f05" stroke-width="2"/>
+              <circle cx="168" cy="108" r="5" fill="#18120c"/>
+              <ellipse cx="232" cy="108" rx="15" ry="8" fill="#fff" stroke="#240f05" stroke-width="2"/>
+              <circle cx="232" cy="108" r="5" fill="#18120c"/>
+              <path d="M178,160 Q200,154 222,160" fill="none" stroke="#240f05" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M252,108 C252,108 258,120 258,125 C258,129 255,132 252,132 C249,132 246,129 246,125 C246,120 252,108 252,108 Z" fill="#bae6fd" stroke="#0284c7" stroke-width="1.5"/>
+            </g>
+
+            <!-- 表情差分 3：激しい動揺・赤面 -->
+            <g id="expr-panic" style="display:none;">
+              <path d="M144,94 L188,82 L186,71 L144,84 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2"/>
+              <path d="M256,94 L212,82 L214,71 L256,84 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2"/>
+              <ellipse cx="168" cy="108" rx="16" ry="11" fill="#fff" stroke="#240f05" stroke-width="2.5"/>
+              <circle cx="168" cy="108" r="3.2" fill="#000"/>
+              <ellipse cx="232" cy="108" rx="16" ry="11" fill="#fff" stroke="#240f05" stroke-width="2.5"/>
+              <circle cx="232" cy="108" r="3.2" fill="#000"/>
+              <path d="M145,126 L153,138 M153,126 L161,138 M161,126 L169,138" stroke="#991b1b" stroke-width="2.5"/>
+              <path d="M235,126 L243,138 M243,126 L251,138 M251,126 L259,138" stroke="#991b1b" stroke-width="2.5"/>
+              <rect x="176" y="152" width="48" height="16" rx="6" fill="#fff" stroke="#240f05" stroke-width="3"/>
+              <line x1="176" y1="160" x2="224" y2="160" stroke="#240f05" stroke-width="2"/>
+              <line x1="188" y1="152" x2="188" y2="168" stroke="#240f05" stroke-width="1.5"/>
+              <line x1="200" y1="152" x2="200" y2="168" stroke="#240f05" stroke-width="1.5"/>
+              <line x1="212" y1="152" x2="212" y2="168" stroke="#240f05" stroke-width="1.5"/>
+              <path d="M142,96 C142,96 147,112 147,118 C147,122 144,124 142,124 C140,124 137,122 137,118 Z" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+              <path d="M256,102 C256,102 262,120 262,126 C262,130 259,133 256,133 C253,133 250,130 250,126 Z" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+            </g>
+
+            <!-- 表情差分 4：ゼロ距離・極限の劇画昇天顔 -->
+            <g id="expr-climax" style="display:none;">
+              <path d="M140,76 L188,92 L185,78 L142,64 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2.5"/>
+              <path d="M260,76 L212,92 L215,78 L258,64 Z" fill="url(#goldHairGrad)" stroke="#240f05" stroke-width="2.5"/>
+              <ellipse cx="168" cy="108" rx="17" ry="12" fill="#fff" stroke="#240f05" stroke-width="3"/>
+              <path d="M156,104 Q168,99 180,104" fill="none" stroke="#94a3b8" stroke-width="2"/>
+              <ellipse cx="232" cy="108" rx="17" ry="12" fill="#fff" stroke="#240f05" stroke-width="3"/>
+              <path d="M220,104 Q232,99 244,104" fill="none" stroke="#94a3b8" stroke-width="2"/>
+              <path d="M172,152 Q200,142 228,152 Q232,178 200,180 Q168,178 172,152 Z" fill="#7f1d1d" stroke="#240f05" stroke-width="3"/>
+              <path d="M176,154 Q200,148 224,154 L220,160 Q200,155 180,160 Z" fill="#fff"/>
+              <text x="115" y="75" font-size="28" fill="#e11d48">♥</text>
+              <text x="265" y="85" font-size="26" fill="#e11d48">♥</text>
+              <path d="M140,55 Q132,38 144,25 M260,55 Q268,38 256,25" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <!-- ラウンド結果オーバーレイ -->
+      <div id="round-result-overlay">
+        <div id="round-eval-label" class="impact-font" style="color:#fde047;">GOD SENSATION!!</div>
+        <div id="round-score-change" class="round-score-big impact-font score-plus">+1,500 pts</div>
+        <div id="round-detail" class="round-detail-text">誤差 3px ／ タイミング 完璧！</div>
+      </div>
+
+      <!-- タイミング目押しバー（メーター往復回数カウント付き） -->
+      <div id="timing-panel">
+        <div class="timing-header-row">
+          <div class="timing-label impact-font">⚡ 中央の赤いゾーンで止めろ！</div>
+          <div id="bounce-counter-badge" class="bounce-badge impact-font">0往復目 (即決ボーナス!)</div>
+        </div>
+        <div class="timing-track">
+          <div class="sweet-zone-good"></div>
+          <div class="sweet-zone-perfect"></div>
+          <div id="timing-cursor"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下部操作ボタン -->
+    <div class="bottom-controls">
+      <button id="btn-action" class="dandy-btn impact-font">ここだ！（PUSH）</button>
+    </div>
+  </section>
+
+  <!-- 3. 最終リザルト画面 -->
+  <section id="result-screen" class="screen">
+    <div id="new-record-badge" class="new-record-badge impact-font">🎉 NEW RECORD 更新!! 🎉</div>
+
+    <div class="result-rank-box">
+      <div id="result-mode-label" style="font-size:0.82rem; color:#fde68a; font-weight:bold;">ダンディ認定ランク</div>
+      <div id="final-rank" class="rank-letter impact-font">S</div>
+      <div id="final-rank-title" class="rank-title impact-font">伝説の鋼鉄乳首マスター</div>
+      <div class="final-score-num impact-font">TOTAL: <span id="final-score">0</span> pts</div>
+    </div>
+
+    <div id="history-container" class="history-list"></div>
+
+    <div class="result-actions">
+      <button id="btn-retry" class="dandy-btn impact-font">🔥 もう1回やる（0.1秒即リトライ）</button>
+      <div class="secondary-row">
+        <button id="btn-to-title" class="secondary-btn">🏠 モード選択へ</button>
+        <button id="btn-x-share" class="x-share-btn">𝕏 で結果をシェア</button>
+        <button id="btn-share" class="secondary-btn">📋 コピー</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 称号コレクションモーダル -->
+<div id="collection-modal" class="modal-backdrop">
+  <div class="modal-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gold-dark); padding-bottom:8px;">
+      <strong style="color:var(--gold-bright); font-size:1.05rem;">👑 ダンディ称号コレクション</strong>
+      <button id="btn-close-titles" class="tool-btn">✕ 閉じる</button>
+    </div>
+    <p style="font-size:0.76rem; color:#d6ccb8; margin:0;">
+      累計ポイントやCHALLENGE各難易度の連続記録を伸ばすと新たな称号が解放されます！
+    </p>
+    <div id="titles-list" class="list-scroll"></div>
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toast">コピーしました！</div>
+
+<script>
+  /* ==========================================================================
+     完全スタンドアロン・ゲームエンジン本体（Ver.6.0）
+     ========================================================================== */
+
+  // --- 脳汁サウンドエンジン（Web Audio API） ---
+  class DopamineAudio {
+    constructor() {
+      this.enabled = true;
+      this.ctx = null;
+      this.lastBeatTime = 0;
+      this.lastBellTime = 0;
+    }
+
+    init() {
+      if (!this.ctx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          this.ctx = new AudioContext();
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    }
+
+    playProximityFeedback(intensity, isPinpoint) {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      const interval = Math.max(0.18, 0.82 - intensity * 0.62);
+      if (now - this.lastBeatTime >= interval) {
+        this.lastBeatTime = now;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(60 + intensity * 55, now);
+        osc.frequency.exponentialRampToValueAtTime(28, now + 0.13);
+
+        gain.gain.setValueAtTime(0.28 + intensity * 0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+
+      if (isPinpoint && now - this.lastBellTime >= 0.45) {
+        this.lastBellTime = now;
+        [1318.5, 1975.5].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.05);
+          gain.gain.setValueAtTime(0.16, now + i * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.05);
+          osc.stop(now + i * 0.05 + 0.36);
+        });
+      }
+    }
+
+    playLockOn() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(380, now);
+      osc.frequency.exponentialRampToValueAtTime(760, now + 0.12);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.19);
+    }
+
+    playFeverFanfare() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98, 2093.0];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+        gain.gain.setValueAtTime(0.22, now + idx * 0.045);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.045 + 0.45);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.045);
+        osc.stop(now + idx * 0.045 + 0.48);
+      });
+    }
+
+    playJackpot(isGod) {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      const subOsc = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(140, now);
+      subOsc.frequency.exponentialRampToValueAtTime(32, now + 0.35);
+      subGain.gain.setValueAtTime(0.55, now);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      subOsc.connect(subGain);
+      subGain.connect(this.ctx.destination);
+      subOsc.start(now);
+      subOsc.stop(now + 0.4);
+
+      const notes = isGod
+        ? [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98]
+        : [523.25, 659.25, 783.99, 1046.5];
+
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = isGod ? 'sawtooth' : 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+        gain.gain.setValueAtTime(0.2, now + idx * 0.055);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.32);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.055);
+        osc.stop(now + idx * 0.055 + 0.34);
+      });
+    }
+
+    playFail() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      [240, 195, 140].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+      gain.gain.setValueAtTime(0.22, now + idx * 0.11);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + idx * 0.11);
+      osc.stop(now + idx * 0.11 + 0.26);
+    });
+  }
+}
+
+const sfx = new DopamineAudio();
+
+// --- パーティクル演出エンジン（黄金＆薔薇吹雪・高DPI対応） ---
+  class ParticleSystem {
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.particles = [];
+      this.running = false;
+      this.width = 0;
+      this.height = 0;
+    }
+
+    resize() {
+      if (!this.canvas || !this.canvas.parentElement) return;
+      const rect = this.canvas.parentElement.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(rect.width));
+      const h = Math.max(1, Math.floor(rect.height));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      this.width = w;
+      this.height = h;
+
+      if (this.canvas.width !== Math.floor(w * dpr) || this.canvas.height !== Math.floor(h * dpr)) {
+        this.canvas.width = Math.floor(w * dpr);
+        this.canvas.height = Math.floor(h * dpr);
+      }
+      if (this.ctx) {
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    }
+
+    burst(normX, normY, count = 45, isRose = false) {
+      this.resize();
+      const cx = normX * this.width;
+      const cy = normY * this.height;
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.5 + Math.random() * 9.0;
+        this.particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2.8,
+          size: isRose ? (6 + Math.random() * 6) : (4 + Math.random() * 5),
+          color: isRose
+            ? (Math.random() < 0.65 ? '#e11d48' : '#fb7185')
+            : (Math.random() < 0.7 ? '#fde047' : '#ffffff'),
+          alpha: 1,
+          rot: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.2,
+          isRose
+        });
+      }
+
+      if (!this.running) {
+        this.running = true;
+        this.loop();
+      }
+    }
+
+    loop() {
+      if (this.particles.length === 0) {
+        this.running = false;
+        if (this.ctx) {
+          this.ctx.clearRect(0, 0, this.width, this.height);
+        }
+        return;
+      }
+
+      this.ctx.clearRect(0, 0, this.width, this.height);
+
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.22;
+        p.vx *= 0.98;
+        p.rot += p.vRot;
+        p.alpha -= 0.017;
+
+        if (p.alpha <= 0) {
+          this.particles.splice(i, 1);
+          continue;
+        }
+
+        this.ctx.save();
+        this.ctx.globalAlpha = p.alpha;
+        this.ctx.translate(p.x, p.y);
+        this.ctx.rotate(p.rot);
+        this.ctx.fillStyle = p.color;
+
+        if (p.isRose) {
+          this.ctx.beginPath();
+          this.ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
+          this.ctx.fill();
+        } else {
+          this.ctx.beginPath();
+          this.ctx.moveTo(0, -p.size);
+          this.ctx.lineTo(p.size * 0.6, 0);
+          this.ctx.lineTo(0, p.size);
+          this.ctx.lineTo(-p.size * 0.6, 0);
+          this.ctx.closePath();
+          this.ctx.fill();
+        }
+        this.ctx.restore();
+      }
+
+      requestAnimationFrame(() => this.loop());
+    }
+  }
+
+  // --- ローカルハイスコア＆難易度別・累計称号コレクション ---
+  const STORAGE_KEY = 'dandy_nipple_game_v6_save';
+
+  const TITLE_LIST = [
+    { id: 't1', name: '見習い指圧師', desc: '初期称号', check: () => true },
+    { id: 't2', name: '胸板の探索者', desc: '累計 3,000 pts 達成', check: (d) => d.careerPoints >= 3000 },
+    { id: 't3', name: '大胸筋ソムリエ', desc: 'TIME ATTACK 5,000 pts 突破', check: (d) => d.best5R >= 5000 },
+    { id: 't4', name: '50%の勝負師', desc: 'NORMAL 5連続成功達成', check: (d) => d.bestChallenge.NORMAL >= 5 },
+    { id: 't5', name: '疾風の胸板ハンター', desc: 'HARD 5連続成功達成', check: (d) => d.bestChallenge.HARD >= 5 },
+    { id: 't6', name: '服越しの魔術師', desc: '累計 30,000 pts 達成', check: (d) => d.careerPoints >= 30000 },
+    { id: 't7', name: '死線を越えた指先', desc: 'DEATH 5連続成功達成', check: (d) => d.bestChallenge.DEATH >= 5 },
+    { id: 't8', name: '伝説の轟マスター', desc: 'DEATH 10連続 または 累計10万pts', check: (d) => d.bestChallenge.DEATH >= 10 || d.careerPoints >= 100000 }
+  ];
+
+  const saveData = {
+    best5R: 0,
+    bestChallenge: { NORMAL: 0, HARD: 0, DEATH: 0 },
+    careerPoints: 0,
+    load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          this.best5R = parsed.best5R || 0;
+          if (parsed.bestChallenge) {
+            this.bestChallenge = {
+              NORMAL: parsed.bestChallenge.NORMAL || 0,
+              HARD: parsed.bestChallenge.HARD || 0,
+              DEATH: parsed.bestChallenge.DEATH || 0
+            };
+          }
+          this.careerPoints = parsed.careerPoints || 0;
+        }
+      } catch (e) {}
+    },
+    save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          best5R: this.best5R,
+          bestChallenge: this.bestChallenge,
+          careerPoints: this.careerPoints
+        }));
+      } catch (e) {}
+    },
+    getHighestTitle() {
+      const unlocked = TITLE_LIST.filter(t => t.check(this));
+      return unlocked[unlocked.length - 1] || TITLE_LIST[0];
+    }
+  };
+
+  saveData.load();
+
+  // --- 難易度定義 ---
+  const DIFFICULTY_CONFIG = {
+    NORMAL: { limitSec: 10.0, label: 'NORMAL' },
+    HARD:   { limitSec: 6.5,  label: 'HARD' },
+    DEATH:  { limitSec: 4.0,  label: 'DEATH' }
+  };
+
+  // --- ゲーム状態管理 ---
+  const state = {
+    mode: '5R', // '5R' (TIME ATTACK) | 'CHALLENGE'
+    difficulty: 'NORMAL',
+    phase: 'TITLE', // 'TITLE' | 'SEARCH' | 'TIMING' | 'ROUND_RESULT' | 'FINAL'
+    round: 1,
+    totalScore: 0,
+    roundTimeLeft: 8.0,
+    roundTimeLimit: 8.0,
+    timerRaf: null,
+    lastFrameTime: 0,
+    combo: 0,
+    maxComboInRun: 0,
+    feverRoundsLeft: 0,
+    history: [],
+    targetNorm: { x: 0.34, y: 0.65, side: '右大胸筋' },
+    cursorNorm: { x: 0.5, y: 0.5 },
+    hasTouched: false,
+    timingPos: 0,
+    timingDir: 1,
+    timingSpeed: 1.75,
+    timingBounces: 0, // メーターが端で折り返した回数（往復カウント）
+    timingRaf: null,
+    challengeFailed: false
+  };
+
+  // --- DOM要素 ---
+  const appContainer = document.getElementById('app-container');
+  const flashOverlay = document.getElementById('flash-overlay');
+  const screens = {
+    TITLE: document.getElementById('title-screen'),
+    PLAY: document.getElementById('play-screen'),
+    FINAL: document.getElementById('result-screen')
+  };
+
+  const hdrRoundWrap = document.getElementById('hdr-round-wrap');
+  const hdrScore = document.getElementById('hdr-score');
+  const hdrTimer = document.getElementById('hdr-timer');
+  const hdrCombo = document.getElementById('hdr-combo');
+  const feverBadge = document.getElementById('fever-badge');
+  const dialogueText = document.getElementById('dialogue-text');
+  const stage = document.getElementById('character-stage');
+  const dandyWrapper = document.getElementById('dandy-wrapper');
+  const faceBase = document.getElementById('face-base');
+  const speedLines = document.getElementById('speed-lines');
+  const cutinBanner = document.getElementById('cutin-banner');
+  const onomatopoeia = document.getElementById('onomatopoeia');
+  const touchCursor = document.getElementById('touch-cursor');
+  const targetPin = document.getElementById('target-pin');
+  const guessPin = document.getElementById('guess-pin');
+  const timingPanel = document.getElementById('timing-panel');
+  const timingCursor = document.getElementById('timing-cursor');
+  const bounceCounterBadge = document.getElementById('bounce-counter-badge');
+  const roundResultOverlay = document.getElementById('round-result-overlay');
+  const btnAction = document.getElementById('btn-action');
+
+  const fx = new ParticleSystem(document.getElementById('fx-canvas'));
+
+  // ステージのサイズ変化をリアルタイム監視してキャンバスとターゲット座標を同期
+  if (typeof ResizeObserver !== 'undefined') {
+    const stageObserver = new ResizeObserver(() => {
+      fx.resize();
+    });
+    stageObserver.observe(stage);
+  }
+
+  window.addEventListener('resize', () => {
+    fx.resize();
+    if (state.phase === 'SEARCH') {
+      spawnTargetOnPec();
+    }
+  });
+
+  const exprGroups = {
+    calm: document.getElementById('expr-calm'),
+    react: document.getElementById('expr-react'),
+    panic: document.getElementById('expr-panic'),
+    climax: document.getElementById('expr-climax')
+  };
+
+  function updateTitleRecordsUI() {
+    document.getElementById('best-5r').textContent = saveData.best5R.toLocaleString();
+    document.getElementById('best-normal').textContent = `${saveData.bestChallenge.NORMAL} 連続`;
+    document.getElementById('best-hard').textContent = `${saveData.bestChallenge.HARD} 連続`;
+    document.getElementById('best-death').textContent = `${saveData.bestChallenge.DEATH} 連続`;
+    document.getElementById('total-career').textContent = saveData.careerPoints.toLocaleString();
+    document.getElementById('current-title-name').textContent = saveData.getHighestTitle().name;
+  }
+  updateTitleRecordsUI();
+
+  // 難易度選択ボタン制御
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.difficulty = btn.dataset.diff;
+    });
+  });
+
+  function showScreen(key) {
+    Object.values(screens).forEach(el => el.classList.remove('active'));
+    screens[key].classList.add('active');
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+  }
+
+  // --- 表情＆ステージリアクション ---
+  function setExpression(level) {
+    Object.keys(exprGroups).forEach(k => {
+      exprGroups[k].style.display = (k === level) ? 'block' : 'none';
+    });
+
+    dandyWrapper.classList.remove('shake-mild', 'shake-hard');
+    speedLines.style.opacity = '0';
+
+    if (level === 'calm' || level === 'react') {
+      faceBase.setAttribute('fill', 'url(#skinGrad)');
+    } else if (level === 'panic') {
+      faceBase.setAttribute('fill', 'url(#blushSkinGrad)');
+      dandyWrapper.classList.add('shake-mild');
+      speedLines.style.opacity = '0.45';
+    } else if (level === 'climax') {
+      faceBase.setAttribute('fill', 'url(#blushSkinGrad)');
+      dandyWrapper.classList.add('shake-hard');
+      speedLines.style.opacity = '0.95';
+    }
+  }
+
+  // --- 胸板・鎖骨・大胸筋周辺の広めの自然な範囲にランダム配置 ---
+  function spawnTargetOnPec() {
+    const stageRect = stage.getBoundingClientRect();
+    if (stageRect.width <= 10 || stageRect.height <= 10) return;
+
+    const isLeftSide = Math.random() < 0.5;
+    // 左右の大胸筋中心を基準に、鎖骨下〜胸板全体へ広めに散らす
+    const baseSvgX = isLeftSide ? 132 : 268;
+    const baseSvgY = 292;
+
+    const offsetX = (Math.random() - 0.5) * 64; // 左右に広め
+    const offsetY = (Math.random() - 0.5) * 66; // 上下（鎖骨下〜大胸筋下部）に広め
+
+    const finalSvgX = baseSvgX + offsetX;
+    const finalSvgY = baseSvgY + offsetY;
+
+    const vbW = 400, vbH = 460;
+    const scale = Math.min(stageRect.width / vbW, stageRect.height / vbH);
+    const renderedW = vbW * scale;
+    const renderedH = vbH * scale;
+    const offsetLeft = (stageRect.width - renderedW) / 2;
+    const offsetTop = (stageRect.height - renderedH) / 2;
+
+    const pixelX = offsetLeft + finalSvgX * scale;
+    const pixelY = offsetTop + finalSvgY * scale;
+
+    state.targetNorm = {
+      x: Math.max(0.1, Math.min(0.9, pixelX / stageRect.width)),
+      y: Math.max(0.2, Math.min(0.9, pixelY / stageRect.height)),
+      side: isLeftSide ? '右胸板エリア' : '左胸板エリア'
+    };
+  }
+
+  // --- ドーパミン衝撃演出 ---
+  function triggerDopamineImpact(labelText, isUltra) {
+    appContainer.classList.remove('impact-shake');
+    void appContainer.offsetWidth;
+    appContainer.classList.add('impact-shake');
+
+    flashOverlay.style.opacity = isUltra ? '0.9' : '0.45';
+    setTimeout(() => { flashOverlay.style.opacity = '0'; }, 140);
+
+    cutinBanner.textContent = labelText;
+    cutinBanner.classList.remove('show');
+    void cutinBanner.offsetWidth;
+    cutinBanner.classList.add('show');
+
+    fx.burst(state.targetNorm.x, state.targetNorm.y, isUltra ? 70 : 35, false);
+    if (isUltra) {
+      fx.burst(0.5, 0.45, 45, true);
+    }
+  }
+
+  // --- ラウンド制限時間カウントダウン（探索フェーズ用） ---
+  function startSearchTimer(limitSeconds) {
+    stopSearchTimer();
+    state.roundTimeLimit = limitSeconds;
+    state.roundTimeLeft = limitSeconds;
+    state.lastFrameTime = performance.now();
+
+    hdrTimer.classList.add('active');
+    hdrTimer.classList.remove('urgent');
+    hdrTimer.textContent = `${state.roundTimeLeft.toFixed(1)}s`;
+
+    function tickTimer(now) {
+      if (state.phase !== 'SEARCH') return;
+      const dt = (now - state.lastFrameTime) / 1000;
+      state.lastFrameTime = now;
+      state.roundTimeLeft = Math.max(0, state.roundTimeLeft - dt);
+
+      hdrTimer.textContent = `${state.roundTimeLeft.toFixed(1)}s`;
+      if (state.roundTimeLeft <= 2.5) {
+        hdrTimer.classList.add('urgent');
+      }
+
+      if (state.roundTimeLeft <= 0) {
+        handleTimeUp();
+        return;
+      }
+      state.timerRaf = requestAnimationFrame(tickTimer);
+    }
+    state.timerRaf = requestAnimationFrame(tickTimer);
+  }
+
+  function stopSearchTimer() {
+    if (state.timerRaf) {
+      cancelAnimationFrame(state.timerRaf);
+      state.timerRaf = null;
+    }
+  }
+
+  // --- 時間切れ処理 ---
+  function handleTimeUp() {
+    state.phase = 'ROUND_RESULT';
+    stopSearchTimer();
+    sfx.playFail();
+    setExpression('calm');
+    onomatopoeia.style.opacity = '0';
+    hdrTimer.classList.remove('urgent');
+
+    const penalty = -400;
+    state.totalScore += penalty;
+    state.combo = 0;
+    state.feverRoundsLeft = 0;
+    hdrScore.textContent = state.totalScore.toLocaleString();
+    hdrCombo.classList.remove('active');
+
+    targetPin.style.display = 'block';
+    targetPin.style.left = `${state.targetNorm.x * 100}%`;
+    targetPin.style.top = `${state.targetNorm.y * 100}%`;
+
+    const evalLabel = document.getElementById('round-eval-label');
+    const scoreChange = document.getElementById('round-score-change');
+    const detailText = document.getElementById('round-detail');
+
+    evalLabel.textContent = '⌛ TIME UP!! 時間切れ！';
+    scoreChange.textContent = `${penalty} pts`;
+    scoreChange.className = 'round-score-big impact-font score-minus';
+    detailText.textContent = '制限時間内にポイントを見つけられなかった…！';
+    dialogueText.textContent = '遅いッ！男なら迷わず直感で急所を突けッ！';
+    roundResultOverlay.style.display = 'block';
+
+    state.history.push({
+      round: state.round,
+      side: state.targetNorm.side,
+      dist: '時間切れ',
+      points: penalty,
+      success: false
+    });
+
+    if (state.mode === 'CHALLENGE') {
+      state.challengeFailed = true;
+      btnAction.textContent = '💀 記録を見る（ゲームオーバー）';
+    } else if (state.round >= 5) {
+      btnAction.textContent = '最終結果を見る ★';
+    } else {
+      btnAction.textContent = '次の胸板へ ➔';
+    }
+  }
+
+  // --- ラウンド開始 ---
+  function startRound(roundNum, extraDialogue = null) {
+    state.round = roundNum;
+    state.phase = 'SEARCH';
+    state.hasTouched = false;
+    state.cursorNorm = { x: 0.5, y: 0.45 };
+
+    if (state.mode === '5R') {
+      hdrRoundWrap.innerHTML = `ROUND <span class="val">${state.round}</span>/5`;
+    } else {
+      hdrRoundWrap.innerHTML = `${state.difficulty} <span class="val">#${state.round}</span>`;
+    }
+    hdrScore.textContent = state.totalScore.toLocaleString();
+
+    if (state.combo >= 2) {
+      hdrCombo.textContent = `${state.combo} COMBO!`;
+      hdrCombo.classList.add('active');
+    } else {
+      hdrCombo.classList.remove('active');
+    }
+
+    // フィーバー表示（CHALLENGEモード専用）
+    const isFeverActive = (state.mode === 'CHALLENGE' && state.feverRoundsLeft > 0);
+    if (isFeverActive) {
+      stage.classList.add('fever-bg');
+      feverBadge.textContent = `🔥 DANDY FEVER 残り${state.feverRoundsLeft}回 (×2)`;
+      feverBadge.classList.add('active');
+    } else {
+      stage.classList.remove('fever-bg');
+      feverBadge.classList.remove('active');
+    }
+
+    setExpression('calm');
+    touchCursor.style.display = 'none';
+    targetPin.style.display = 'none';
+    guessPin.style.display = 'none';
+    timingPanel.style.display = 'none';
+    roundResultOverlay.style.display = 'none';
+    onomatopoeia.style.opacity = '0';
+
+    btnAction.classList.remove('crimson-mode');
+    btnAction.disabled = false;
+    btnAction.textContent = 'ここだ！（PUSH）';
+
+    if (extraDialogue) {
+      dialogueText.textContent = extraDialogue;
+    } else if (isFeverActive) {
+      dialogueText.textContent = '🔥フィーバー継続中だァァッ！スコア2倍の黄金タイムを逃すなッ！！';
+    } else if (state.mode === '5R') {
+      dialogueText.textContent = '8秒以内に見つけ、メーター即決でボーナスを奪い取れッ！';
+    } else {
+      const lines = [
+        'フッ…どこを探している？俺の大胸筋は鉄壁だぞ。',
+        'さあ来い…5連続成功で即決1/2フィーバー抽選だ！',
+        '筋肉の鎧に隠された一点…貴様の指先で暴いてみろ。'
+      ];
+      dialogueText.textContent = lines[(roundNum - 1) % lines.length];
+    }
+
+    spawnTargetOnPec();
+    fx.resize();
+
+    const limitSec = (state.mode === '5R')
+      ? 8.0
+      : (DIFFICULTY_CONFIG[state.difficulty]?.limitSec || 10.0);
+    startSearchTimer(limitSec);
+  }
+
+  // 擬音ポップアップ表示ヘルパー（欠落していた関数を補完）
+  let onomaTimer = null;
+  function showOnomatopoeia(text, x, y, color) {
+    onomatopoeia.textContent = text;
+    onomatopoeia.style.left = `${Math.max(40, Math.min(stage.clientWidth - 40, x))}px`;
+    onomatopoeia.style.top = `${Math.max(24, Math.min(stage.clientHeight - 24, y))}px`;
+    onomatopoeia.style.color = color;
+    onomatopoeia.style.opacity = '1';
+    onomatopoeia.style.transform = 'translate(-50%, -50%) scale(1.1)';
+    clearTimeout(onomaTimer);
+    onomaTimer = setTimeout(() => {
+      onomatopoeia.style.opacity = '0';
+    }, 350);
+  }
+
+  // --- 指・マウス探索 ---
+  function handleExploreMove(clientX, clientY) {
+    if (state.phase !== 'SEARCH') return;
+
+    const rect = stage.getBoundingClientRect();
+    const nx = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / rect.width));
+    const ny = Math.max(0.05, Math.min(0.95, (clientY - rect.top) / rect.height));
+
+    state.cursorNorm = { x: nx, y: ny };
+    state.hasTouched = true;
+
+    touchCursor.style.display = 'block';
+    touchCursor.style.left = `${nx * 100}%`;
+    touchCursor.style.top = `${ny * 100}%`;
+
+    const dx = (nx - state.targetNorm.x) * rect.width;
+    const dy = (ny - state.targetNorm.y) * rect.height;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < 26) {
+      setExpression('climax');
+      dialogueText.textContent = 'ヌォォォォッ！！そ、そこだァァッ！！ピンポイントすぎるッ！！';
+      showOnomatopoeia('ﾋﾞｸﾝﾋﾞｸﾝ!!', nx * rect.width, ny * rect.height - 36, '#dc2626');
+      sfx.playProximityFeedback(1.0, true);
+    } else if (dist < 60) {
+      setExpression('panic');
+      dialogueText.textContent = 'っ…！おい待て、その辺りは…筋肉が勝手に反応する…！';
+      showOnomatopoeia('ﾄﾞｸﾝｯ!!', nx * rect.width, ny * rect.height - 30, '#e11d48');
+      sfx.playProximityFeedback(0.75, false);
+    } else if (dist < 115) {
+      setExpression('react');
+      dialogueText.textContent = 'ほう…悪くない勘だ。少しずつ核心に近づいているな…。';
+      showOnomatopoeia('ｻﾞﾜ…', nx * rect.width, ny * rect.height - 24, '#b45309');
+      sfx.playProximityFeedback(0.4, false);
+    } else {
+      setExpression('calm');
+      dialogueText.textContent = 'フッ…そこはただの分厚い筋肉だ。もっとよく探せ。';
+      onomatopoeia.style.opacity = '0';
+    }
+  }
+
+  stage.addEventListener('pointerdown', (e) => {
+    sfx.init();
+    handleExploreMove(e.clientX, e.clientY);
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'mouse' || e.buttons > 0) {
+      handleExploreMove(e.clientX, e.clientY);
+    }
+  });
+
+  // --- タイミングフェーズ（メーター往復回数カウント付き） ---
+  function updateBounceBadgeUI() {
+    const b = state.timingBounces;
+    if (b === 0) {
+      bounceCounterBadge.textContent = '往路即決！(+300pts)';
+      bounceCounterBadge.classList.remove('penalty');
+    } else if (b === 1) {
+      bounceCounterBadge.textContent = '1往復目 (+150pts)';
+      bounceCounterBadge.classList.remove('penalty');
+    } else if (b === 2) {
+      bounceCounterBadge.textContent = '2往復目 (±0pts)';
+      bounceCounterBadge.classList.remove('penalty');
+    } else {
+      const pen = (b - 2) * 120;
+      bounceCounterBadge.textContent = `${b}往復目 (-${pen}pts)`;
+      bounceCounterBadge.classList.add('penalty');
+    }
+  }
+
+  function startTimingPhase() {
+    if (!state.hasTouched) {
+      dialogueText.textContent = 'おいおい、まだ一度も胸に触れていないぞ！まずはなぞって探せ！';
+      return;
+    }
+
+    state.phase = 'TIMING';
+    stopSearchTimer();
+    hdrTimer.classList.remove('urgent');
+    sfx.playLockOn();
+    onomatopoeia.style.opacity = '0';
+
+    dialogueText.textContent = 'ロックオン！往復される前に赤いゾーンで即決しろッ！！';
+    timingPanel.style.display = 'block';
+    btnAction.classList.add('crimson-mode');
+    btnAction.textContent = '今だ！突く！！（STOP）';
+
+    state.timingPos = 0;
+    state.timingDir = 1;
+    state.timingBounces = 0;
+    state.timingSpeed = Math.min(4.2, 1.8 + (state.round - 1) * 0.22);
+    updateBounceBadgeUI();
+
+    function animateBar() {
+      if (state.phase !== 'TIMING') return;
+      state.timingPos += state.timingDir * state.timingSpeed;
+      if (state.timingPos >= 100) {
+        state.timingPos = 100;
+        state.timingDir = -1;
+        state.timingBounces += 1;
+        updateBounceBadgeUI();
+      } else if (state.timingPos <= 0) {
+        state.timingPos = 0;
+        state.timingDir = 1;
+        state.timingBounces += 1;
+        updateBounceBadgeUI();
+      }
+      timingCursor.style.left = `${state.timingPos}%`;
+      state.timingRaf = requestAnimationFrame(animateBar);
+    }
+    state.timingRaf = requestAnimationFrame(animateBar);
+  }
+
+  // --- 判定＆スコア計算（即時1/2フィーバー抽選統合） ---
+  function evaluateRound() {
+    state.phase = 'ROUND_RESULT';
+    cancelAnimationFrame(state.timingRaf);
+    timingPanel.style.display = 'none';
+
+    const rect = stage.getBoundingClientRect();
+    const dx = (state.cursorNorm.x - state.targetNorm.x) * rect.width;
+    const dy = (state.cursorNorm.y - state.targetNorm.y) * rect.height;
+    const pixelDist = Math.round(Math.hypot(dx, dy));
+    const timingDiff = Math.abs(50 - state.timingPos);
+
+    let posScore = 0;
+    let posRank = '';
+    let isHitSuccess = true;
+
+    if (pixelDist <= 26) {
+      posScore = 1000;
+      posRank = '神業ピンポイント';
+    } else if (pixelDist <= 52) {
+      posScore = 750;
+      posRank = 'かなり惜しい';
+    } else if (pixelDist <= 95) {
+      posScore = 350;
+      posRank = '胸板エリア';
+    } else {
+      posScore = -300;
+      posRank = '見当違い';
+      isHitSuccess = false;
+    }
+
+    let timingMult = 1.0;
+    let timingLabel = '';
+    let timingPenalty = 0;
+    if (timingDiff <= 6.5) {
+      timingMult = 1.5;
+      timingLabel = 'GOD!!';
+    } else if (timingDiff <= 17.5) {
+      timingMult = 1.1;
+      timingLabel = 'GOOD!';
+    } else {
+      timingMult = 0.5;
+      timingPenalty = -250;
+      timingLabel = 'BAD…';
+      if (pixelDist > 52) isHitSuccess = false;
+    }
+
+    // メーター往復回数ボーナス・ペナルティ
+    let bounceScore = 0;
+    if (state.timingBounces === 0) {
+      bounceScore = 300;
+    } else if (state.timingBounces === 1) {
+      bounceScore = 150;
+    } else if (state.timingBounces === 2) {
+      bounceScore = 0;
+    } else {
+      bounceScore = -((state.timingBounces - 2) * 120);
+    }
+
+    // TIME ATTACKは残り秒数スピードボーナスも加算
+    const speedBonus = (state.mode === '5R' && isHitSuccess)
+      ? Math.round(state.roundTimeLeft * 35)
+      : 0;
+
+    const rawPoints = Math.round(posScore * timingMult) + timingPenalty + bounceScore + speedBonus;
+    const isRoundSuccess = (rawPoints > 0 && isHitSuccess);
+
+    if (isRoundSuccess) {
+      state.combo += 1;
+      if (state.combo > state.maxComboInRun) {
+        state.maxComboInRun = state.combo;
+      }
+    } else {
+      state.combo = 0;
+      state.feverRoundsLeft = 0;
+    }
+
+    const comboBonusMult = isRoundSuccess ? (1 + (state.combo - 1) * 0.12) : 1.0;
+    const isFeverApplied = (state.mode === 'CHALLENGE' && isRoundSuccess && state.feverRoundsLeft > 0);
+    const feverMult = isFeverApplied ? 2.0 : 1.0;
+
+    if (isFeverApplied) {
+      state.feverRoundsLeft = Math.max(0, state.feverRoundsLeft - 1);
+    }
+
+    const finalPoints = isRoundSuccess
+      ? Math.round(rawPoints * comboBonusMult * feverMult)
+      : rawPoints;
+
+    state.totalScore += finalPoints;
+    if (finalPoints > 0) {
+      saveData.careerPoints += finalPoints;
+      saveData.save();
+    }
+
+    // ピン表示
+    targetPin.style.display = 'block';
+    targetPin.style.left = `${state.targetNorm.x * 100}%`;
+    targetPin.style.top = `${state.targetNorm.y * 100}%`;
+
+    guessPin.style.display = 'block';
+    guessPin.style.left = `${state.cursorNorm.x * 100}%`;
+    guessPin.style.top = `${state.cursorNorm.y * 100}%`;
+
+    // CHALLENGEモード：5連続成功ごとの「画面を変えない即決1/2フィーバー抽選」
+    let feverGachaOutcome = 'NONE'; // 'NONE' | 'WIN' | 'LOSE'
+    if (state.mode === 'CHALLENGE' && isRoundSuccess && state.combo > 0 && state.combo % 5 === 0) {
+      if (Math.random() < 0.5) {
+        feverGachaOutcome = 'WIN';
+        state.feverRoundsLeft = 3;
+      } else {
+        feverGachaOutcome = 'LOSE';
+      }
+    }
+
+    const isGodHit = (pixelDist <= 26 && timingDiff <= 6.5);
+
+    setTimeout(() => {
+      hdrScore.textContent = state.totalScore.toLocaleString();
+
+      if (state.combo >= 2) {
+        hdrCombo.textContent = `${state.combo} COMBO!`;
+        hdrCombo.classList.remove('active');
+        void hdrCombo.offsetWidth;
+        hdrCombo.classList.add('active');
+      } else {
+        hdrCombo.classList.remove('active');
+      }
+
+      const evalLabel = document.getElementById('round-eval-label');
+      const scoreChange = document.getElementById('round-score-change');
+      const detailText = document.getElementById('round-detail');
+
+      if (feverGachaOutcome === 'WIN') {
+        // 画面切り替えなしでその場で黄金フィーバー爆発！
+        stage.classList.add('fever-bg');
+        feverBadge.textContent = `🔥 DANDY FEVER 残り${state.feverRoundsLeft}回 (×2)`;
+        feverBadge.classList.add('active');
+        setExpression('climax');
+        sfx.playFeverFanfare();
+        triggerDopamineImpact('🔥 50%当選!! FEVER突入!! 🔥', true);
+        evalLabel.textContent = '🎰 1/2当選!! DANDY FEVER突入!!';
+        dialogueText.textContent = 'ヌォォォォッ！！50%を引き当てたァァッ！！黄金フィーバー突入だッ！！';
+      } else if (feverGachaOutcome === 'LOSE') {
+        // ハズレ時は余計な演出なしでサラッと継続（シュールな一言のみ）
+        setExpression('react');
+        sfx.playJackpot(false);
+        triggerDopamineImpact('NICE HIT!!', false);
+        evalLabel.textContent = 'NICE HIT!!（1/2フィーバーはハズレ…）';
+        dialogueText.textContent = 'フッ…5連勝の1/2抽選はハズレたか。だが男なら黙って次へ行け！';
+      } else if (isGodHit) {
+        setExpression('climax');
+        sfx.playJackpot(true);
+        triggerDopamineImpact('★ GOD HIT!! ★', true);
+        evalLabel.textContent = isFeverApplied ? '🔥 FEVER GOD HIT!! 🔥' : '★ GOD SENSATION!! ★';
+        dialogueText.textContent = 'グォォォォッ！！完璧すぎる…俺の大胸筋が完全に昇天した…！！';
+      } else if (isRoundSuccess) {
+        setExpression('panic');
+        sfx.playJackpot(false);
+        triggerDopamineImpact('NICE HIT!!', false);
+        evalLabel.textContent = isFeverApplied ? '🔥 FEVER HIT!! (×2)' : 'NICE SENSATION!';
+        dialogueText.textContent = 'くっ…！見事な指さばきだ…思わず熱い吐息が漏れたぜ！';
+      } else {
+        setExpression('calm');
+        sfx.playFail();
+        evalLabel.textContent = state.mode === 'CHALLENGE' ? '💀 CHALLENGE FAILED…' : 'MISS…';
+        dialogueText.textContent = 'ハッハッハ！一体どこを突いているんだ？出直してこい！';
+      }
+
+      scoreChange.textContent = `${finalPoints >= 0 ? '+' : ''}${finalPoints.toLocaleString()} pts`;
+      scoreChange.className = `round-score-big impact-font ${finalPoints >= 0 ? 'score-plus' : 'score-minus'}`;
+      detailText.textContent = `ズレ:${pixelDist}px ／ ${timingLabel} ／ ${state.timingBounces}往復`;
+      roundResultOverlay.style.display = 'block';
+
+      state.history.push({
+        round: state.round,
+        side: state.targetNorm.side,
+        dist: `${pixelDist}px (${state.timingBounces}往復)`,
+        points: finalPoints,
+        success: isRoundSuccess
+      });
+
+      btnAction.classList.remove('crimson-mode');
+
+      if (state.mode === 'CHALLENGE' && !isRoundSuccess) {
+        state.challengeFailed = true;
+        btnAction.textContent = '💀 記録を見る（ゲームオーバー）';
+      } else if (state.mode === '5R' && state.round >= 5) {
+        btnAction.textContent = '最終結果を見る ★';
+      } else {
+        btnAction.textContent = '次の胸板へ ➔';
+      }
+    }, isGodHit ? 140 : 35);
+  }
+
+  // --- 最終リザルト画面 ---
+  function showFinalResult() {
+    state.phase = 'FINAL';
+    stopSearchTimer();
+    stage.classList.remove('fever-bg');
+    feverBadge.classList.remove('active');
+    hdrTimer.classList.remove('active');
+    showScreen('FINAL');
+
+    // ローカルハイスコア更新チェック
+    let isNewRecord = false;
+    if (state.mode === '5R') {
+      if (state.totalScore > saveData.best5R) {
+        saveData.best5R = state.totalScore;
+        isNewRecord = true;
+      }
+    } else {
+      const prevBest = saveData.bestChallenge[state.difficulty] || 0;
+      if (state.maxComboInRun > prevBest) {
+        saveData.bestChallenge[state.difficulty] = state.maxComboInRun;
+        isNewRecord = true;
+      }
+    }
+    saveData.save();
+    updateTitleRecordsUI();
+
+    const newRecBadge = document.getElementById('new-record-badge');
+    newRecBadge.style.display = isNewRecord ? 'inline-block' : 'none';
+    if (isNewRecord) sfx.playJackpot(true);
+
+    const score = state.totalScore;
+    document.getElementById('final-score').textContent = score.toLocaleString();
+
+    let rank = 'C';
+    let title = '見習い筋肉タッチ師';
+
+    if (state.mode === 'CHALLENGE') {
+      document.getElementById('result-mode-label').textContent = `CHALLENGE [${state.difficulty}] 記録：${state.maxComboInRun} 連続成功`;
+      if (state.maxComboInRun >= 10) {
+        rank = 'SS';
+        title = '無限沼の覇王・轟の相棒';
+      } else if (state.maxComboInRun >= 5) {
+        rank = 'S';
+        title = '50%を制す大胸筋マスター';
+      } else if (state.maxComboInRun >= 2) {
+        rank = 'A';
+        title = '期待の胸板ハンター';
+      } else {
+        rank = 'B';
+        title = '一発屋チャレンジャー';
+      }
+    } else {
+      document.getElementById('result-mode-label').textContent = 'TIME ATTACK（全5ラウンド）認定ランク';
+      if (score >= 7000) {
+        rank = 'S';
+        title = '音速の鋼鉄乳首マスター';
+      } else if (score >= 4500) {
+        rank = 'A';
+        title = '熟練の大胸筋ソムリエ';
+      } else if (score >= 1800) {
+        rank = 'B';
+        title = '気まぐれ胸板ハンター';
+      } else {
+        rank = 'D';
+        title = '筋肉ベタベタおじさん';
+      }
+    }
+
+    document.getElementById('final-rank').textContent = rank;
+    document.getElementById('final-rank-title').textContent = title;
+
+    const histContainer = document.getElementById('history-container');
+    histContainer.innerHTML = state.history.map(h => `
+      <div class="history-row">
+        <span>#${h.round}（${h.side} / ${h.dist}）</span>
+        <strong style="color:${h.points >= 0 ? '#fde047' : '#f87171'};">
+          ${h.points >= 0 ? '+' : ''}${h.points.toLocaleString()} pts
+        </strong>
+      </div>
+    `).join('');
+  }
+
+  // --- ゲーム開始共通関数 ---
+  function initGameSession(mode) {
+    sfx.init();
+    state.mode = mode;
+    state.totalScore = 0;
+    state.combo = 0;
+    state.maxComboInRun = 0;
+    state.feverRoundsLeft = 0;
+    state.challengeFailed = false;
+    state.history = [];
+
+    showScreen('PLAY');
+    startRound(1);
+  }
+
+  // --- ボタンイベント ---
+  document.getElementById('btn-start-5r').addEventListener('click', () => initGameSession('5R'));
+  document.getElementById('btn-start-challenge').addEventListener('click', () => initGameSession('CHALLENGE'));
+  document.getElementById('btn-retry').addEventListener('click', () => initGameSession(state.mode));
+
+  document.getElementById('btn-to-title').addEventListener('click', () => {
+    stopSearchTimer();
+    hdrRoundWrap.innerHTML = `ROUND <span class="val">-</span>`;
+    hdrTimer.classList.remove('active');
+    hdrCombo.classList.remove('active');
+    showScreen('TITLE');
+  });
+
+  btnAction.addEventListener('click', () => {
+    if (state.phase === 'SEARCH') {
+      startTimingPhase();
+    } else if (state.phase === 'TIMING') {
+      evaluateRound();
+    } else if (state.phase === 'ROUND_RESULT') {
+      if (state.mode === 'CHALLENGE' && state.challengeFailed) {
+        showFinalResult();
+      } else if (state.mode === '5R' && state.round >= 5) {
+        showFinalResult();
+      } else {
+        startRound(state.round + 1);
+      }
+    }
+  });
+
+  // サウンド切替
+  const btnSound = document.getElementById('btn-sound');
+  btnSound.addEventListener('click', () => {
+    sfx.enabled = !sfx.enabled;
+    btnSound.textContent = sfx.enabled ? '🔊 ON' : '🔇 OFF';
+  });
+
+  // シェア用テキスト生成
+  function buildShareText() {
+    const modeName = state.mode === 'CHALLENGE'
+      ? `CHALLENGE [${state.difficulty}]（${state.maxComboInRun}連続成功）`
+      : `TIME ATTACK（全5ラウンド）`;
+    const rankTitle = document.getElementById('final-rank-title').textContent;
+    return `【乳首当てゲーム】\nモード: ${modeName}\nスコア: ${state.totalScore.toLocaleString()} pts\n認定称号: ${rankTitle}\n#乳首当てゲーム #バカゲー`;
+  }
+
+  // X（旧Twitter）で結果をシェア
+  document.getElementById('btn-x-share').addEventListener('click', () => {
+    const text = buildShareText();
+    const pageUrl = window.location.href.startsWith('http') ? window.location.href : '';
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}${pageUrl ? `&url=${encodeURIComponent(pageUrl)}` : ''}`;
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+  });
+
+  // 結果コピー
+  document.getElementById('btn-share').addEventListener('click', () => {
+    const text = buildShareText();
+
+    const temp = document.createElement('textarea');
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+
+    showToast('結果をクリップボードにコピーしました！');
+  });
+
+  // 称号コレクションモーダル
+  const collectionModal = document.getElementById('collection-modal');
+  document.getElementById('btn-open-titles').addEventListener('click', () => {
+    const listEl = document.getElementById('titles-list');
+    listEl.innerHTML = TITLE_LIST.map(t => {
+      const unlocked = t.check(saveData);
+      return `
+        <div class="badge-item ${unlocked ? '' : 'locked'}">
+          <div>
+            <div style="font-weight:900; color:${unlocked ? '#fde047' : '#aaa'};">
+              ${unlocked ? '👑' : '🔒'} ${t.name}
+            </div>
+            <div style="font-size:0.74rem; color:#ccc;">条件: ${t.desc}</div>
+          </div>
+          <div style="font-size:0.74rem; font-weight:bold; color:${unlocked ? '#4ade80' : '#888'};">
+            ${unlocked ? '解放済' : '未解放'}
+          </div>
+        </div>
+      `;
+    }).join('');
+    collectionModal.classList.add('open');
+  });
+
+  document.getElementById('btn-close-titles').addEventListener('click', () => {
+    collectionModal.classList.remove('open');
+  });
+</script>
+<script>
+  // iOS Safariなどでのダブルタップ拡大を追加で抑止
+  document.addEventListener('dblclick', function (event) {
+    event.preventDefault();
+  }, { passive: false });
+</script>
+</body>
+</html>
