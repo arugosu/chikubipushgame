@@ -17,7 +17,7 @@
 
 ---
 
-## 著作権・利用規約（重要）
+## 著作権・利用規約
 
 **Copyright (c) 2026 [arugosu]. All Rights Reserved.**
 
